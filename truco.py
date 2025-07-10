@@ -35,39 +35,39 @@ def formatear_combinacion(combinacion):
     """Formatea una combinación de cartas para mostrarla de manera legible"""
     return ' '.join(sorted(combinacion))
 
-def obtener_letra_combinacion(idx):
+def obtener_letra_combinacion(indice):
     """Convierte un índice en una letra o serie de letras (A, B, C, ..., Z, AA, AB, ...)"""
-    if idx <= 26:
-        return string.ascii_uppercase[idx - 1]
+    if indice <= 26:
+        return string.ascii_uppercase[indice - 1]
     else:
-        q, r = divmod(idx - 1, 26)
+        q, r = divmod(indice - 1, 26)
         return string.ascii_uppercase[q - 1] + string.ascii_uppercase[r]
 
 def obtener_numero_combinaciones():
     """
     Solicita al usuario el número de combinaciones a analizar por PG.
-    Retorna un número válido entre 1 y 1000.
+    Devuelve un número válido entre 1 y 1000.
     """
     while True:
         try:
-            num = int(input("\nIngrese el número de combinaciones a analizar por PG (1-1000): "))
-            if 1 <= num <= 1000:
-                return num
+            numero = int(input("\nIngrese el número de combinaciones a analizar por PG (1-1000): "))
+            if 1 <= numero <= 1000:
+                return numero
             else:
                 print("Por favor, ingrese un número entre 1 y 1000.")
         except ValueError:
             print("Por favor, ingrese un número válido.")
 
-def find_representative_combinations(combinations, max_representatives):
+def encontrar_combinaciones_representativas(combinaciones, maximo_representantes):
     """
-    Randomly selects combinations up to max_representatives.
-    If there are fewer than max_representatives combinations, returns all of them.
+    Selecciona aleatoriamente combinaciones hasta maximo_representantes.
+    Si hay menos combinaciones que maximo_representantes, devuelve todas.
     """
-    if len(combinations) <= max_representatives:
-        return combinations
-    return random.sample(combinations, max_representatives)
+    if len(combinaciones) <= maximo_representantes:
+        return combinaciones
+    return random.sample(combinaciones, maximo_representantes)
 
-def calcular_probabilidades_por_pg(max_combinaciones):
+def calcular_combinaciones_por_pg(max_combinaciones):
     """
     Calcula combinaciones posibles y las agrupa por PG.
     Para PG con menos combinaciones que max_combinaciones, analiza todas.
@@ -82,9 +82,9 @@ def calcular_probabilidades_por_pg(max_combinaciones):
     inicio = time.time()
     
     # Primera pasada: recolectar todas las combinaciones por PG
-    for comb in combinations(todas_las_cartas, 9):
-        pg = calcular_puntos(comb)
-        combinaciones_por_pg[pg].append(comb)
+    for combinacion in combinations(todas_las_cartas, 9):
+        pg = calcular_puntos(combinacion)
+        combinaciones_por_pg[pg].append(combinacion)
         
         procesadas += 1
         if procesadas % 10000 == 0:
@@ -96,13 +96,13 @@ def calcular_probabilidades_por_pg(max_combinaciones):
     # Segunda pasada: seleccionar las combinaciones para análisis
     representativas_por_pg = {}
     for pg, combinaciones in combinaciones_por_pg.items():
-        total_combinaciones = len(combinaciones)
-        if total_combinaciones <= max_combinaciones:
-            print(f"\rPG {pg}: Analizando todas las {total_combinaciones} combinaciones...", end="")
+        total_combinaciones_pg = len(combinaciones)
+        if total_combinaciones_pg <= max_combinaciones:
+            print(f"\rPG {pg}: Analizando todas las {total_combinaciones_pg} combinaciones...", end="")
             representativas_por_pg[pg] = combinaciones
         else:
-            print(f"\rPG {pg}: Seleccionando {max_combinaciones} combinaciones representativas de {total_combinaciones}...", end="")
-            representativas = find_representative_combinations(combinaciones, max_representatives=max_combinaciones)
+            print(f"\rPG {pg}: Seleccionando {max_combinaciones} combinaciones representativas de {total_combinaciones_pg}...", end="")
+            representativas = encontrar_combinaciones_representativas(combinaciones, maximo_representantes=max_combinaciones)
             representativas_por_pg[pg] = representativas
     
     print("\n\nResumen de combinaciones por PG:")
@@ -133,8 +133,8 @@ def calcular_probabilidad_condicional(combinacion_base, todas_las_cartas, max_mu
         muestras_procesadas = 0
         
         for _ in range(max_muestras):
-            comb = tuple(random.sample(cartas_restantes, 9))
-            if calcular_puntos(comb) > puntos_base:
+            combinacion = tuple(random.sample(cartas_restantes, 9))
+            if calcular_puntos(combinacion) > puntos_base:
                 combinaciones_superiores += 1
             
             muestras_procesadas += 1
@@ -148,8 +148,8 @@ def calcular_probabilidad_condicional(combinacion_base, todas_las_cartas, max_mu
         combinaciones_superiores = 0
         procesadas = 0
         
-        for comb in combinations(cartas_restantes, 9):
-            if calcular_puntos(comb) > puntos_base:
+        for combinacion in combinations(cartas_restantes, 9):
+            if calcular_puntos(combinacion) > puntos_base:
                 combinaciones_superiores += 1
             
             procesadas += 1
@@ -167,7 +167,7 @@ def analizar_probabilidades(num_combinaciones):
     inicio_total = time.time()
     
     # Primero calculamos todas las combinaciones posibles y las agrupamos por PG
-    combinaciones_por_pg = calcular_probabilidades_por_pg(num_combinaciones)
+    combinaciones_por_pg = calcular_combinaciones_por_pg(num_combinaciones)
     todas_las_cartas = list(cartas.keys())
     
     # Ahora procesamos cada PG
@@ -183,15 +183,15 @@ def analizar_probabilidades(num_combinaciones):
         probabilidades_individuales = []
         combinaciones_analizadas[pg] = []  # Lista para guardar las combinaciones de este PG
         
-        for idx, combinacion in enumerate(combinaciones, 1):
-            letra = obtener_letra_combinacion(idx)
+        for indice, combinacion in enumerate(combinaciones, 1):
+            letra = obtener_letra_combinacion(indice)
             print(f"\nProcesando PG {pg} {letra}:")
             print(f"Cartas: {formatear_combinacion(combinacion)}")
             
-            prob = calcular_probabilidad_condicional(combinacion, todas_las_cartas)
-            probabilidades_individuales.append(prob)
+            probabilidad = calcular_probabilidad_condicional(combinacion, todas_las_cartas)
+            probabilidades_individuales.append(probabilidad)
             combinaciones_analizadas[pg].append(combinacion)  # Guardamos la combinación
-            print(f"Probabilidad para esta combinación: {prob:.4f}")
+            print(f"Probabilidad para esta combinación: {probabilidad:.4f}")
         
         # Calcular estadísticas para este PG
         resultados[pg] = {
@@ -214,7 +214,7 @@ def analizar_probabilidades(num_combinaciones):
     print(f"\nTiempo total de cálculo: {tiempo_total:.2f} segundos")
     return resultados, combinaciones_analizadas
 
-def verificar_espacio_disponible(ruta_guardado='.'):
+def verificar_espacio_disponible(ruta_guardado='.'): 
     """
     Verifica si hay suficiente espacio en disco para guardar los resultados.
     Retorna True si hay suficiente espacio, False en caso contrario.
@@ -253,24 +253,24 @@ def guardar_resultados_excel(resultados, num_combinaciones, combinaciones_analiz
 
     try:
         # Crear datos para el resumen
-        resumen_data = []
+        resumen_datos = []
         
         for puntos in sorted(resultados.keys()):
-            stats = resultados[puntos]
-            resumen_data.append({
+            estadisticas = resultados[puntos]
+            resumen_datos.append({
                 'Puntos': puntos,
-                'Cantidad_Combinaciones': len(stats['probabilidades']),
-                'Probabilidad_Promedio': stats['promedio'],
-                'Probabilidad_Min': stats['minimo'],
-                'Probabilidad_Max': stats['maximo'],
-                'Desviacion_Estandar': stats['desviacion_std']
+                'Cantidad_Combinaciones': len(estadisticas['probabilidades']),
+                'Probabilidad_Promedio': estadisticas['promedio'],
+                'Probabilidad_Min': estadisticas['minimo'],
+                'Probabilidad_Max': estadisticas['maximo'],
+                'Desviacion_Estandar': estadisticas['desviacion_std']
             })
         
         # Crear DataFrame
-        df_resumen = pd.DataFrame(resumen_data)
+        df_resumen = pd.DataFrame(resumen_datos)
         
         # Agregar estadísticas globales
-        stats_globales = pd.DataFrame({
+        estadisticas_globales = pd.DataFrame({
             'Puntos': ['Estadísticas Globales'],
             'Cantidad_Combinaciones': [df_resumen['Cantidad_Combinaciones'].sum()],
             'Probabilidad_Promedio': [df_resumen['Probabilidad_Promedio'].mean()],
@@ -279,20 +279,20 @@ def guardar_resultados_excel(resultados, num_combinaciones, combinaciones_analiz
             'Desviacion_Estandar': [df_resumen['Desviacion_Estandar'].mean()]
         })
         
-        df_final = pd.concat([df_resumen, stats_globales], ignore_index=True)
+        df_final = pd.concat([df_resumen, estadisticas_globales], ignore_index=True)
         
         # Preparar datos de detalles
-        detalles_data = []
-        for pg, stats in resultados.items():
-            for idx, prob in enumerate(stats['probabilidades']):
-                combinacion = combinaciones_analizadas[pg][idx]
-                detalles_data.append({
+        detalles_datos = []
+        for pg, estadisticas in resultados.items():
+            for indice, probabilidad in enumerate(estadisticas['probabilidades']):
+                combinacion = combinaciones_analizadas[pg][indice]
+                detalles_datos.append({
                     'PG': pg,
                     'Combinación': formatear_combinacion(combinacion),
-                    'Probabilidad': prob
+                    'Probabilidad': probabilidad
                 })
         
-        df_detalles = pd.DataFrame(detalles_data) if detalles_data else None
+        df_detalles = pd.DataFrame(detalles_datos) if detalles_datos else None
         
         # Guardar en Excel con manejo de errores
         nombre_archivo = os.path.join(ruta_guardado, f'probabilidades_resumen_{num_combinaciones}.xlsx')
@@ -312,19 +312,19 @@ def guardar_resultados_excel(resultados, num_combinaciones, combinaciones_analiz
                         df_detalles.to_excel(writer, sheet_name='Probabilidades_Individuales', index=False)
                     
                     # Ajustar columnas en ambas hojas
-                    for sheet_name in writer.sheets:
-                        sheet = writer.sheets[sheet_name]
-                        for column in sheet.columns:
-                            max_length = 0
-                            column = [cell for cell in column]
-                            for cell in column:
+                    for nombre_hoja in writer.sheets:
+                        hoja = writer.sheets[nombre_hoja]
+                        for columna in hoja.columns:
+                            max_longitud = 0
+                            columna = [celda for celda in columna]
+                            for celda in columna:
                                 try:
-                                    if len(str(cell.value)) > max_length:
-                                        max_length = len(str(cell.value))
+                                    if len(str(celda.value)) > max_longitud:
+                                        max_longitud = len(str(celda.value))
                                 except:
                                     pass
-                            adjusted_width = (max_length + 2)
-                            sheet.column_dimensions[column[0].column_letter].width = adjusted_width
+                            ancho_ajustado = (max_longitud + 2)
+                            hoja.column_dimensions[columna[0].column_letter].width = ancho_ajustado
             
             # Si se guardó correctamente el temporal, moverlo al archivo final
             if os.path.exists(nombre_archivo):
@@ -350,12 +350,12 @@ def guardar_resultados_excel(resultados, num_combinaciones, combinaciones_analiz
         print(f"\nError al procesar los datos: {e}")
         return False
 
-def main():
+def principal():
     print("Iniciando análisis...")
     num_combinaciones = obtener_numero_combinaciones()
     resultados, combinaciones_analizadas = analizar_probabilidades(num_combinaciones)
     guardar_resultados_excel(resultados, num_combinaciones, combinaciones_analizadas)
-    print("Análisis completado!")
+    print("¡Análisis completado!")
 
 if __name__ == "__main__":
-    main()
+    principal()
